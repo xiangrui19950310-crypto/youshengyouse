@@ -6,7 +6,7 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path'); // 新增：导入path模块
 
-// 导入 CloudinaryStorage：使用最简单的 require 方式（假设模块的默认导出就是构造函数）
+// 导入 CloudinaryStorage
 const CloudinaryStorage = require('multer-storage-cloudinary'); 
 
 const Video = require('./models/Video');
@@ -32,14 +32,13 @@ if (!cloudName) {
     console.log(`✅ Cloudinary 已配置。Cloud Name: ${cloudName}`);
 }
 
-
 // Configure Multer for file upload
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'videos',
     resource_type: 'video',
-    format: 'mp4', // 修复：使用固定的字符串格式
+    format: 'mp4',
     transformation: [{ quality: 'auto' }]
   }
 });
@@ -80,13 +79,10 @@ app.get('/api/videos/:id', async (req, res) => {
 // Upload a video
 app.post('/api/videos', upload.single('video'), async (req, res) => {
     try {
-        // 改进的错误检查：确保文件已成功上传
         if (!req.file || !req.file.public_id) {
-            // 如果 Multer/Cloudinary 中间件失败但未抛出错误，则返回 500
             return res.status(500).json({ message: "文件上传到 Cloudinary 失败，请检查中间件配置或网络连接。" });
         }
 
-        // 修复：从 req.file.url 获取完整的视频 URL (或者 secure_url)
         const videoUrl = req.file.url || req.file.secure_url; 
         
         if (!videoUrl) {
@@ -94,7 +90,6 @@ app.post('/api/videos', upload.single('video'), async (req, res) => {
             return res.status(500).json({ message: "上传成功，但无法获取 Cloudinary URL。" });
         }
 
-        // Generate thumbnail URL
         const thumbnailUrl = cloudinary.url(req.file.public_id, {
             resource_type: 'video',
             format: 'jpg',
@@ -104,7 +99,7 @@ app.post('/api/videos', upload.single('video'), async (req, res) => {
         const video = new Video({
             title: req.body.title,
             description: req.body.description || '',
-            videoUrl: videoUrl, // ⬅️ 使用修复后的 URL 变量
+            videoUrl: videoUrl,
             thumbnailUrl: thumbnailUrl,
             publicId: req.file.public_id
         });
@@ -112,8 +107,7 @@ app.post('/api/videos', upload.single('video'), async (req, res) => {
         await video.save();
         res.status(201).json(video);
     } catch (err) {
-        console.error('FATAL ERROR in POST /api/videos:', err); // 堆栈打印
-        // 保持 500 状态码以匹配前端的错误报告
+        console.error('FATAL ERROR in POST /api/videos:', err);
         res.status(500).json({ message: err.message || "内部服务器错误" });
     }
 });
@@ -137,7 +131,7 @@ app.patch('/api/videos/:id', async (req, res) => {
     await video.save();
     res.json(video);
   } catch (err) {
-    console.error('Error in PATCH /api/videos/:id:', err); // 堆栈打印
+    console.error('Error in PATCH /api/videos/:id:', err);
     res.status(400).json({ message: err.message });
   }
 });
@@ -150,15 +144,13 @@ app.delete('/api/videos/:id', async (req, res) => {
       return res.status(404).json({ message: 'Video not found' });
     }
 
-    // Delete video from Cloudinary
     await cloudinary.uploader.destroy(video.publicId, { resource_type: 'video' });
 
-    // Delete video from MongoDB
     await Video.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Video deleted' });
   } catch (err) {
-    console.error('Error in DELETE /api/videos/:id:', err); // 堆栈打印
+    console.error('Error in DELETE /api/videos/:id:', err);
     res.status(500).json({ message: err.message });
   }
 });
@@ -171,24 +163,27 @@ app.get('/api/videos/:id/recommended', async (req, res) => {
       .limit(5);
     res.json(videos);
   } catch (err) {
-    console.error('Error in GET /api/videos/:id/recommended:', err); // 堆栈打印
+    console.error('Error in GET /api/videos/:id/recommended:', err);
     res.status(500).json({ message: err.message });
   }
 });
 
 // ----------------------------------------------------
-// 🎯 新增：静态文件托管配置
+// 🎯 静态文件托管配置（优先匹配静态文件）
 // ----------------------------------------------------
-// 托管前端静态文件
+// 托管前端静态文件（HTML、CSS、JS等）
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// 兜底路由：所有未匹配的请求都返回 index.html（解决单页应用路由问题）
-app.get('*', (req, res) => {
+// ----------------------------------------------------
+// 🎯 兜底路由：所有未匹配的请求都返回 index.html（解决单页应用路由问题）
+// （兼容旧版 path-to-regexp，用 '(.*)' 替代 '*'）
+// ----------------------------------------------------
+app.get('(.*)', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 // ----------------------------------------------------
-// 🎯 Multer 错误处理中间件 (必须放在所有路由之后)
+// 🎯 错误处理中间件 (必须放在所有路由之后！)
 // ----------------------------------------------------
 app.use((err, req, res, next) => {
     // 检查错误是否来自 Multer
@@ -199,7 +194,6 @@ app.use((err, req, res, next) => {
     // 处理其他可能来自 CloudinaryStorage 的错误
     if (err) {
         console.error('❌ UNCAUGHT MIDDLEWARE ERROR:', err);
-        // 如果错误是 Multer 或 Cloudinary 相关的，但不是 MulterError 实例，我们仍然返回 500
         return res.status(500).json({ message: err.message || '未捕获的服务器中间件错误' });
     }
     next();
