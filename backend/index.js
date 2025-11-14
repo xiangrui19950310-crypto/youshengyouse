@@ -4,7 +4,9 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary');
 const cors = require('cors');
 const multer = require('multer');
-const path = require('path'); // 新增：导入path模块
+const path = require('path');
+// 1. 引入刚刚安装的库
+const fallback = require('express-history-api-fallback');
 
 // 导入 CloudinaryStorage
 const CloudinaryStorage = require('multer-storage-cloudinary'); 
@@ -12,6 +14,8 @@ const CloudinaryStorage = require('multer-storage-cloudinary');
 const Video = require('./models/Video');
 
 const app = express();
+// 2. 定义前端文件的根目录
+const root = path.join(__dirname, '../frontend');
 
 // Middleware
 app.use(cors());
@@ -169,34 +173,19 @@ app.get('/api/videos/:id/recommended', async (req, res) => {
 });
 
 // ----------------------------------------------------
-// 🎯 静态文件托管配置（优先匹配静态文件）
+// 🎯 静态文件托管和路由 fallback 配置 (这是关键！)
 // ----------------------------------------------------
-// 托管前端静态文件（HTML、CSS、JS等）
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-// ----------------------------------------------------
-// 🎯 兜底路由：所有未匹配的请求都返回 index.html（解决单页应用路由问题）
-// （兼容旧版 path-to-regexp，用 '(.*)' 替代 '*'）
-// ----------------------------------------------------
-app.get('(.*)', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
-});
+// 先托管静态文件
+app.use(express.static(root));
+// 所有其他请求都 fallback 到 index.html
+app.use(fallback('index.html', { root: root }));
 
 // ----------------------------------------------------
 // 🎯 错误处理中间件 (必须放在所有路由之后！)
 // ----------------------------------------------------
 app.use((err, req, res, next) => {
-    // 检查错误是否来自 Multer
-    if (err instanceof multer.MulterError) {
-        console.error('❌ MULTER ERROR:', err.message);
-        return res.status(500).json({ message: `文件上传中间件失败: ${err.message}` });
-    }
-    // 处理其他可能来自 CloudinaryStorage 的错误
-    if (err) {
-        console.error('❌ UNCAUGHT MIDDLEWARE ERROR:', err);
-        return res.status(500).json({ message: err.message || '未捕获的服务器中间件错误' });
-    }
-    next();
+    console.error('❌ UNCAUGHT ERROR:', err);
+    res.status(500).json({ message: err.message || '服务器内部错误' });
 });
 
 // Start server
