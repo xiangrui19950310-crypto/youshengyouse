@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>有声有色 - 视频播放</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FF3E3E',
+            secondary: '#2A2A2A',
+            dark: '#1A1A1A',
+            light: '#F5F5F5'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+      .hover-scale {
+        transition: transform 0.3s ease;
+      }
+      .hover-scale:hover {
+        transform: scale(1.03);
+      }
+    }
+  </style>
+</head>
+<body class="bg-dark text-light min-h-screen">
+  <!-- 导航栏 -->
+  <nav class="bg-secondary py-4 px-6 flex justify-between items-center">
+    <div class="flex items-center">
+      <a href="index.html" class="text-2xl font-bold text-primary flex items-center">
+        <i class="fa fa-play-circle mr-2"></i>
+        <span>有声有色</span>
+      </a>
+    </div>
+    <div>
+      <a href="admin.html" class="bg-primary hover:bg-red-600 text-white px-4 py-2 rounded-md transition duration-300">
+        <i class="fa fa-upload mr-1"></i> 上传视频
+      </a>
+    </div>
+  </nav>
+
+  <!-- 主要内容 -->
+  <main class="container mx-auto px-4 py-8">
+    <!-- 视频播放区域 -->
+    <div class="mb-8">
+      <div id="videoContainer" class="bg-black aspect-video rounded-lg overflow-hidden mb-4">
+        <!-- 视频播放器将通过JavaScript动态添加 -->
+        <div class="flex items-center justify-center h-full">
+          <i class="fa fa-spinner fa-spin text-4xl text-primary"></i>
+        </div>
+      </div>
+      <h1 id="videoTitle" class="text-2xl font-bold mb-2">加载中...</h1>
+      <p id="videoDate" class="text-gray-400"></p>
+    </div>
+
+    <!-- 推荐视频区域 -->
+    <div>
+      <h2 class="text-xl font-bold mb-4">推荐视频</h2>
+      <div id="recommendedVideos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <!-- 推荐视频将通过JavaScript动态添加 -->
+        <div class="animate-pulse col-span-full text-center py-8">
+          <i class="fa fa-spinner fa-spin text-2xl text-primary mb-2"></i>
+          <p>加载推荐视频中...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-secondary py-6 mt-12">
+    <div class="container mx-auto px-4 text-center">
+      <p>&copy; 2025 有声有色 - 视频分享平台</p>
+    </div>
+  </footer>
+
+  <script>
+    // API基础URL
+    const API_URL = 'http://localhost:5000/api';
+
+    // 从URL获取视频ID
+    function getVideoId() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('id');
+    }
+
+    // 获取视频详情并播放
+    async function fetchAndPlayVideo() {
+      const videoId = getVideoId();
+      if (!videoId) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/videos/${videoId}`);
+        if (!response.ok) {
+          throw new Error('视频不存在');
+        }
+        const video = await response.json();
+
+        // 更新视频标题和日期
+        document.getElementById('videoTitle').textContent = video.title;
+        document.getElementById('videoDate').textContent = formatDate(video.createdAt);
+
+        // 创建视频播放器
+        const videoContainer = document.getElementById('videoContainer');
+        videoContainer.innerHTML = `
+          <video id="videoPlayer" class="w-full h-full" controls>
+            <source src="${video.videoUrl}" type="video/mp4">
+            您的浏览器不支持HTML5视频播放。
+          </video>
+        `;
+
+        // 自动播放视频
+        const videoPlayer = document.getElementById('videoPlayer');
+        videoPlayer.play().catch(err => {
+          console.log('自动播放被阻止:', err);
+        });
+
+        // 获取推荐视频
+        fetchRecommendedVideos(videoId);
+      } catch (error) {
+        console.error('Error fetching video:', error);
+        const videoContainer = document.getElementById('videoContainer');
+        videoContainer.innerHTML = `
+          <div class="flex flex-col items-center justify-center h-full p-4">
+            <i class="fa fa-exclamation-triangle text-4xl text-yellow-500 mb-4"></i>
+            <p class="text-xl">视频加载失败</p>
+            <a href="index.html" class="mt-4 text-primary hover:underline">返回首页</a>
+          </div>
+        `;
+      }
+    }
+
+    // 获取推荐视频
+    async function fetchRecommendedVideos(currentVideoId) {
+      try {
+        const response = await fetch(`${API_URL}/videos/${currentVideoId}/recommended`);
+        const videos = await response.json();
+        
+        const recommendedContainer = document.getElementById('recommendedVideos');
+        recommendedContainer.innerHTML = '';
+        
+        if (videos.length === 0) {
+          recommendedContainer.innerHTML = `
+            <div class="col-span-full text-center py-8">
+              <p>暂无推荐视频</p>
+            </div>
+          `;
+          return;
+        }
+        
+        videos.forEach(video => {
+          const videoCard = document.createElement('div');
+          videoCard.className = 'bg-secondary rounded-lg overflow-hidden shadow hover-scale';
+          videoCard.innerHTML = `
+            <a href="play.html?id=${video._id}">
+              <div class="relative">
+                <img src="${video.thumbnailUrl}" alt="${video.title}" class="w-full aspect-video object-cover">
+                <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                  <i class="fa fa-play-circle text-3xl text-white"></i>
+                </div>
+              </div>
+              <div class="p-3">
+                <h3 class="font-bold text-sm truncate">${video.title}</h3>
+              </div>
+            </a>
+          `;
+          recommendedContainer.appendChild(videoCard);
+        });
+      } catch (error) {
+        console.error('Error fetching recommended videos:', error);
+        const recommendedContainer = document.getElementById('recommendedVideos');
+        recommendedContainer.innerHTML = `
+          <div class="col-span-full text-center py-8">
+            <p>推荐视频加载失败</p>
+          </div>
+        `;
+      }
+    }
+
+    // 格式化日期
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    // 页面加载时获取视频
+    document.addEventListener('DOMContentLoaded', fetchAndPlayVideo);
+  </script>
+</body>
+</html>

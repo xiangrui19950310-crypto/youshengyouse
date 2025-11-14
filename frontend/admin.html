@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>有声有色 - 管理员</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#FF3E3E',
+            secondary: '#2A2A2A',
+            dark: '#1A1A1A',
+            light: '#F5F5F5'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .text-shadow {
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+      .hover-scale {
+        transition: transform 0.3s ease;
+      }
+      .hover-scale:hover {
+        transform: scale(1.03);
+      }
+    }
+  </style>
+</head>
+<body class="bg-dark text-light min-h-screen">
+  <nav class="bg-secondary py-4 px-6 flex justify-between items-center">
+    <div class="flex items-center">
+      <a href="index.html" class="text-2xl font-bold text-primary flex items-center">
+        <i class="fa fa-play-circle mr-2"></i>
+        <span>有声有色</span>
+      </a>
+    </div>
+    <div>
+      <a href="index.html" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-300 mr-2">
+        <i class="fa fa-home mr-1"></i> 返回首页
+      </a>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8 text-center">视频管理</h1>
+
+    <div class="bg-secondary rounded-lg p-6 mb-8">
+      <h2 class="text-xl font-bold mb-4">上传新视频</h2>
+      <form id="uploadForm" class="space-y-4">
+        <div>
+          <label for="videoTitle" class="block mb-2">视频标题</label>
+          <input type="text" id="videoTitle" name="title" class="w-full bg-dark text-light p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" required>
+        </div>
+        <div>
+          <label for="videoDescription" class="block mb-2">视频描述 (可选)</label>
+          <textarea id="videoDescription" name="description" rows="3" class="w-full bg-dark text-light p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+        <div>
+          <label for="videoFile" class="block mb-2">选择视频文件</label>
+          <input type="file" id="videoFile" name="video" accept="video/*" class="w-full bg-dark text-light p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" required>
+        </div>
+        <div class="flex items-center">
+          <button type="submit" id="uploadButton" class="bg-primary hover:bg-red-600 text-white px-6 py-2 rounded-md transition duration-300 flex items-center">
+            <i class="fa fa-upload mr-2"></i> 上传视频
+          </button>
+          <div id="uploadProgress" class="ml-4 hidden">
+            <div class="flex items-center">
+              <i class="fa fa-spinner fa-spin mr-2"></i>
+              <span id="progressText">0%</span>
+            </div>
+          </div>
+        </div>
+        <div id="uploadMessage" class="hidden"></div>
+      </form>
+    </div>
+
+    <div class="bg-secondary rounded-lg p-6">
+      <h2 class="text-xl font-bold mb-4">已上传视频</h2>
+      <div id="videoList" class="space-y-6">
+        <div class="animate-pulse text-center py-12">
+          <i class="fa fa-spinner fa-spin text-4xl text-primary mb-4"></i>
+          <p class="text-xl">加载视频中...</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="editModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-secondary rounded-lg p-6 max-w-md w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold">编辑视频</h3>
+        <button id="closeModal" class="text-gray-400 hover:text-white">
+          <i class="fa fa-times text-xl"></i>
+        </button>
+      </div>
+      <form id="editForm" class="space-y-4">
+        <input type="hidden" id="editVideoId">
+        <div>
+          <label for="editVideoTitle" class="block mb-2">视频标题</label>
+          <input type="text" id="editVideoTitle" name="title" class="w-full bg-dark text-light p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary" required>
+        </div>
+        <div>
+          <label for="editVideoDescription" class="block mb-2">视频描述 (可选)</label>
+          <textarea id="editVideoDescription" name="description" rows="3" class="w-full bg-dark text-light p-2 rounded border border-gray-700 focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+        <div class="flex justify-end">
+          <button type="button" id="cancelEdit" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-300 mr-2">
+            取消
+          </button>
+          <button type="submit" id="saveEdit" class="bg-primary hover:bg-red-600 text-white px-4 py-2 rounded-md transition duration-300">
+            保存
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-secondary rounded-lg p-6 max-w-md w-full">
+      <h3 class="text-xl font-bold mb-4">确认删除</h3>
+      <p class="mb-6">您确定要删除这个视频吗？此操作无法撤销。</p>
+      <input type="hidden" id="deleteVideoId">
+      <div class="flex justify-end">
+        <button id="cancelDelete" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-md transition duration-300 mr-2">
+          取消
+        </button>
+        <button id="confirmDelete" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition duration-300">
+          确认删除
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-secondary py-6 mt-12">
+    <div class="container mx-auto px-4 text-center">
+      <p>&copy; 2025 有声有色 - 视频分享平台</p>
+    </div>
+  </footer>
+
+  <script>
+    // API基础URL
+    const API_URL = 'http://localhost:5000/api';
+
+    // 页面加载时获取视频列表
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchVideos();
+      setupEventListeners();
+    });
+
+    // 设置事件监听器
+    function setupEventListeners() {
+      // 上传表单提交
+      document.getElementById('uploadForm').addEventListener('submit', handleUpload);
+      
+      // 编辑模态框
+      document.getElementById('closeModal').addEventListener('click', closeEditModal);
+      document.getElementById('cancelEdit').addEventListener('click', closeEditModal);
+      document.getElementById('editForm').addEventListener('submit', handleEdit);
+      
+      // 删除模态框
+      // 修复：移除对不存在的ID 'closeDeleteModal' 的监听，只保留存在的监听器。
+      document.getElementById('cancelDelete').addEventListener('click', closeDeleteModal);
+      document.getElementById('confirmDelete').addEventListener('click', handleDelete);
+    }
+
+    // 获取视频列表
+    async function fetchVideos() {
+      try {
+        const response = await fetch(`${API_URL}/videos`);
+        
+        // 检查HTTP状态码。如果状态码是 500，且返回的不是 JSON (导致 JSON 解析失败)
+        if (!response.ok) {
+            // 如果后端返回的不是JSON，则尝试读取文本作为错误信息
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const errorJson = await response.json();
+                throw new Error(errorJson.message || `后端返回 ${response.status} 错误`);
+            } else {
+                // 如果返回的是 HTML 或其他非 JSON 内容 (例如 500 时的错误页面)
+                throw new Error(`无法连接到API或后端返回非JSON错误 (${response.status})`);
+            }
+        }
+
+        const videos = await response.json();
+        
+        const videoList = document.getElementById('videoList');
+        videoList.innerHTML = '';
+        
+        if (videos.length === 0) {
+          videoList.innerHTML = `
+            <div class="text-center py-12">
+              <i class="fa fa-film text-4xl text-gray-500 mb-4"></i>
+              <p class="text-xl">暂无视频</p>
+            </div>
+          `;
+          return;
+        }
+        
+        videos.forEach(video => {
+          const videoItem = document.createElement('div');
+          videoItem.className = 'bg-dark rounded-lg p-4 flex flex-col md:flex-row items-start md:items-center gap-4';
+          videoItem.innerHTML = `
+            <div class="w-full md:w-1/4">
+              <img src="${video.thumbnailUrl}" alt="${video.title}" class="w-full aspect-video object-cover rounded">
+            </div>
+            <div class="w-full md:w-2/4">
+              <h3 class="font-bold text-lg">${video.title}</h3>
+              <p class="text-gray-400 text-sm mt-1">${formatDate(video.createdAt)}</p>
+              <p class="text-gray-300 mt-2 text-sm line-clamp-2">${video.description || '无描述'}</p>
+            </div>
+            <div class="w-full md:w-1/4 flex justify-end space-x-2">
+              <button class="edit-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm" data-id="${video._id}" data-title="${video.title}" data-description="${video.description || ''}">
+                <i class="fa fa-pencil mr-1"></i> 编辑
+              </button>
+              <button class="delete-btn bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm" data-id="${video._id}">
+                <i class="fa fa-trash mr-1"></i> 删除
+              </button>
+            </div>
+          `;
+          videoList.appendChild(videoItem);
+        });
+        
+        // 添加编辑和删除按钮事件
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.addEventListener('click', () => openEditModal(btn.dataset.id));
+        });
+        
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.addEventListener('click', () => openDeleteModal(btn.dataset.id));
+        });
+      } catch (error) {
+        console.error('Error fetching videos:', error);
+        const videoList = document.getElementById('videoList');
+        videoList.innerHTML = `
+          <div class="text-center py-12">
+            <i class="fa fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+            <p class="text-xl text-red-400">加载失败：请检查后端服务 (5000 端口) 是否有错误日志。</p>
+            <p class="text-sm text-gray-400 mt-2">错误详情: ${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // 处理视频上传
+    async function handleUpload(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const uploadButton = document.getElementById('uploadButton');
+      const uploadProgress = document.getElementById('uploadProgress');
+      const uploadMessage = document.getElementById('uploadMessage');
+      
+      // 显示上传进度
+      uploadButton.disabled = true;
+      uploadProgress.classList.remove('hidden');
+      uploadMessage.classList.add('hidden');
+      
+      try {
+        const response = await fetch(`${API_URL}/videos`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        // 检查响应状态
+        if (!response.ok) {
+          // 这里的逻辑与 fetchVideos 保持一致，以正确捕获 500 错误
+          const contentType = response.headers.get("content-type");
+          let errorMessage = '上传失败';
+          if (contentType && contentType.indexOf("application/json") !== -1) {
+            const error = await response.json();
+            errorMessage = error.message || errorMessage;
+          } else {
+            errorMessage = `后端返回非JSON错误 (${response.status})，请检查后端日志。`;
+          }
+          throw new Error(errorMessage);
+        }
+        
+        // 上传成功
+        uploadMessage.textContent = '视频上传成功！';
+        uploadMessage.className = 'text-green-500 p-2 rounded';
+        uploadMessage.classList.remove('hidden');
+        
+        // 重置表单
+        e.target.reset();
+        
+        // 刷新视频列表
+        fetchVideos();
+      } catch (error) {
+        console.error('Upload error:', error);
+        uploadMessage.textContent = `上传失败: ${error.message}`;
+        uploadMessage.className = 'text-red-500 p-2 rounded';
+        uploadMessage.classList.remove('hidden');
+      } finally {
+        // 隐藏上传进度
+        uploadButton.disabled = false;
+        uploadProgress.classList.add('hidden');
+      }
+    }
+
+    // 打开编辑模态框
+    async function openEditModal(videoId) {
+      try {
+        const response = await fetch(`${API_URL}/videos/${videoId}`);
+        const video = await response.json();
+        
+        document.getElementById('editVideoId').value = video._id;
+        document.getElementById('editVideoTitle').value = video.title;
+        document.getElementById('editVideoDescription').value = video.description || '';
+        
+        document.getElementById('editModal').classList.remove('hidden');
+      } catch (error) {
+        console.error('Error fetching video for edit:', error);
+        alert('无法加载视频信息');
+      }
+    }
+
+    // 关闭编辑模态框
+    function closeEditModal() {
+      document.getElementById('editModal').classList.add('hidden');
+    }
+
+    // 处理视频编辑
+    async function handleEdit(e) {
+      e.preventDefault();
+      
+      const videoId = document.getElementById('editVideoId').value;
+      const title = document.getElementById('editVideoTitle').value;
+      const description = document.getElementById('editVideoDescription').value;
+      
+      try {
+        const response = await fetch(`${API_URL}/videos/${videoId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ title, description })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || '更新失败');
+        }
+        
+        // 更新成功
+        closeEditModal();
+        fetchVideos();
+      } catch (error) {
+        console.error('Edit error:', error);
+        alert(`更新失败: ${error.message}`);
+      }
+    }
+
+    // 打开删除模态框
+    function openDeleteModal(videoId) {
+      document.getElementById('deleteVideoId').value = videoId;
+      document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    // 关闭删除模态框
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    // 处理视频删除
+    async function handleDelete() {
+      const videoId = document.getElementById('deleteVideoId').value;
+      
+      try {
+        const response = await fetch(`${API_URL}/videos/${videoId}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || '删除失败');
+        }
+        
+        // 删除成功
+        closeDeleteModal();
+        fetchVideos();
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert(`删除失败: ${error.message}`);
+      }
+    }
+
+    // 格式化日期
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+  </script>
+</body>
+</html>
