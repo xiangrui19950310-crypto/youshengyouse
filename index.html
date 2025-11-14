@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频首页 - 有声有色 / Land</title>
+    <style>
+        :root {
+            --primary: #165DFF;
+            --primary-light: #E8F3FF;
+            --text-dark: #1D2129;
+            --text-gray: #4E5969;
+            --text-light: #86909C;
+            --bg-light: #F2F3F5;
+            --white: #FFFFFF;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--primary);
+            border-radius: 3px;
+        }
+
+        .admin-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .admin-link:hover {
+            background-color: var(--primary-light);
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .video-card {
+            background: var(--white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .video-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .video-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .video-thumbnail-container {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 比例 */
+            overflow: hidden;
+        }
+
+        .video-thumbnail {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .video-card:hover .video-thumbnail {
+            transform: scale(1.05);
+        }
+
+        .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background-color: rgba(22, 93, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .video-card:hover .play-icon {
+            opacity: 1;
+        }
+
+        .play-icon::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 10px 0 10px 18px;
+            border-color: transparent transparent transparent white;
+            margin-left: 2px;
+        }
+
+        .video-info {
+            padding: 16px;
+        }
+
+        .video-info h3 {
+            margin: 0 0 8px 0;
+            font-size: 1rem;
+            color: var(--text-dark);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+
+        .video-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .placeholder {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-light);
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--primary-light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 16px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>有声有色</h1>
+        <a href="admin.html" class="admin-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 14H5C3.89543 14 3 13.1046 3 12C3 10.8954 3.89543 10 5 10H12M12 14V18M12 14V10M19 14H14M19 14C20.1046 14 21 13.1046 21 12C21 10.8954 20.1046 10 19 10M19 10H14M14 10V6C14 4.89543 13.1046 4 12 4C10.8954 4 10 4.89543 10 6V18C10 19.1046 10.8954 20 12 20C13.1046 20 14 19.1046 14 18V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            管理后台
+        </a>
+    </header>
+    
+    <div id="videoGrid" class="video-grid">
+        <div class="placeholder">
+            <div class="loading-spinner"></div>
+            <p>正在加载视频列表...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:3000/admin/videos';
+    const videoGridDiv = document.getElementById('videoGrid');
+    
+    // Cloudinary 缩略图 URL 转换
+    function generateThumbnailUrl(videoUrl) {
+        if (!videoUrl) return '';
+
+        const uploadIndex = videoUrl.indexOf('/upload/');
+        if (uploadIndex === -1) return videoUrl;
+
+        const baseUrl = videoUrl.substring(0, uploadIndex + 8);
+        const transformation = 'f_jpg,w_600,h_338,c_fill,g_auto,q_auto/';
+        const restOfUrl = videoUrl.substring(uploadIndex + 8);
+
+        return `${baseUrl}${transformation}${restOfUrl}`;
+    }
+
+    async function fetchAndRenderVideos() {
+        videoGridDiv.innerHTML = `
+            <div class="placeholder">
+                <div class="loading-spinner"></div>
+                <p>正在加载...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || '获取视频列表失败');
+            }
+
+            if (data.videos.length === 0) {
+                videoGridDiv.innerHTML = `
+                    <div class="placeholder">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 16px; opacity: 0.3;">
+                            <path d="M12 8V12L15 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <p>暂无视频，请前往管理后台上传。</p>
+                    </div>
+                `;
+                return;
+            }
+
+            videoGridDiv.innerHTML = data.videos.map(video => {
+                const thumbnailUrl = generateThumbnailUrl(video.url);
+                const uploadDate = new Date(video.uploadDate).toLocaleDateString();
+                
+                return `
+                    <div class="video-card">
+                        <a href="video.html?id=${video._id}" class="video-link">
+                            <div class="video-thumbnail-container">
+                                <img src="${thumbnailUrl}" alt="${video.title} 缩略图" class="video-thumbnail" 
+                                     onerror="this.onerror=null;this.src='https://via.placeholder.com/600x338?text=No+Preview';">
+                                <div class="play-icon"></div>
+                            </div>
+                            <div class="video-info">
+                                <h3>${video.title}</h3>
+                                <div class="video-meta">
+                                    <span>上传于 ${uploadDate}</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('获取视频列表失败:', error);
+            videoGridDiv.innerHTML = `
+                <div class="placeholder" style="color: #f53f3f;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 16px;">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M15 9L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <p>加载失败: ${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchAndRenderVideos);
+</script>
+</body>
+</html>

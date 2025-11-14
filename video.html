@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频播放 - 有声有色 / Land</title>
+    <style>
+        :root {
+            --primary: #165DFF;
+            --primary-light: #E8F3FF;
+            --text-dark: #1D2129;
+            --text-gray: #4E5969;
+            --text-light: #86909C;
+            --bg-light: #F2F3F5;
+            --white: #FFFFFF;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .header-links {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .header-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .header-link:hover {
+            background-color: var(--primary-light);
+        }
+
+        .content {
+            display: flex;
+            gap: 30px;
+        }
+
+        .main-content {
+            flex: 3;
+            min-width: 0;
+        }
+
+        .sidebar {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .video-player-container {
+            background: #000;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 比例 */
+        }
+
+        .video-player {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-details {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .video-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-dark);
+            line-height: 1.3;
+        }
+
+        .video-meta {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--primary);
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .recommended-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .recommend-item {
+            display: flex;
+            gap: 12px;
+            background-color: var(--white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition);
+        }
+
+        .recommend-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background-color: var(--primary-light);
+        }
+
+        .recommend-thumb-container {
+            flex-shrink: 0;
+            width: 120px;
+            height: 70px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .recommend-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .recommend-item:hover .recommend-thumb {
+            transform: scale(1.05);
+        }
+
+        .recommend-info {
+            padding: 8px 0;
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .recommend-info h4 {
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-height: 1.4;
+        }
+
+        .recommend-meta {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        .placeholder {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-light);
+            background-color: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--primary-light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 992px) {
+            .content {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                order: 2;
+            }
+
+            .main-content {
+                order: 1;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .video-title {
+                font-size: 1.2rem;
+            }
+
+            .recommend-thumb-container {
+                width: 100px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-links">
+            <a href="index.html" class="header-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M9 22V12H15V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                视频首页
+            </a>
+            <a href="admin.html" class="header-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 14H5C3.89543 14 3 13.1046 3 12C3 10.8954 3.89543 10 5 10H12M12 14V18M12 14V10M19 14H14M19 14C20.1046 14 21 13.1046 21 12C21 10.8954 20.1046 10 19 10M19 10H14M14 10V6C14 4.89543 13.1046 4 12 4C10.8954 4 10 4.89543 10 6V18C10 19.1046 10.8954 20 12 20C13.1046 20 14 19.1046 14 18V14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                管理后台
+            </a>
+        </div>
+    </header>
+    
+    <div class="content">
+        <div class="main-content">
+            <div class="video-player-container">
+                <video id="videoPlayer" class="video-player" controls poster="https://via.placeholder.com/1200x675?text=Loading+Video..." preload="metadata">
+                    您的浏览器不支持视频播放
+                </video>
+            </div>
+            
+            <div class="video-details">
+                <h1 id="videoTitle" class="video-title">正在加载视频信息...</h1>
+                <div class="video-meta">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                        <polyline points="12 6 12 12 16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="videoUploadDate">上传日期: -</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h2 class="sidebar-title">有声有色</h2>
+            <div id="recommendedVideos" class="recommended-list">
+                <div class="placeholder">
+                    <div class="loading-spinner"></div>
+                    <p>正在加载推荐...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BASE_API_URL = 'http://localhost:3000/admin/videos';
+    const videoId = new URLSearchParams(window.location.search).get('id');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const videoTitleElement = document.getElementById('videoTitle');
+    const videoUploadDateElement = document.getElementById('videoUploadDate');
+    const recommendedVideosDiv = document.getElementById('recommendedVideos');
+    
+    if (!videoId) {
+        videoTitleElement.textContent = '错误: URL中缺少视频ID';
+    }
+
+    // 生成缩略图URL
+    function generateThumbnailUrl(videoUrl) {
+        if (!videoUrl) return '';
+        const uploadIndex = videoUrl.indexOf('/upload/');
+        if (uploadIndex === -1) return videoUrl; 
+        const baseUrl = videoUrl.substring(0, uploadIndex + 8);
+        const transformation = 'f_jpg,w_480,h_270,c_fill,g_auto,q_auto/';
+        const restOfUrl = videoUrl.substring(uploadIndex + 8);
+        return `${baseUrl}${transformation}${restOfUrl}`;
+    }
+
+    // 获取并渲染当前视频
+    async function fetchCurrentVideo() {
+        if (!videoId) return;
+
+        try {
+            const response = await fetch(`${BASE_API_URL}/${videoId}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || '获取视频详情失败');
+            }
+
+            const video = data.video;
+            
+            // 设置视频源和详情
+            videoPlayer.src = video.url;
+            videoPlayer.poster = generateThumbnailUrl(video.url);
+            videoTitleElement.textContent = video.title;
+            
+            // 格式化日期
+            const date = new Date(video.uploadDate);
+            const formattedDate = date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            videoUploadDateElement.textContent = `上传于 ${formattedDate}`;
+
+        } catch (error) {
+            console.error('获取当前视频详情失败:', error);
+            videoTitleElement.textContent = `加载失败: ${error.message}`;
+            // 显示错误占位符
+            document.querySelector('.video-player-container').innerHTML = `
+                <div style="width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 20px;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 16px;">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M15 9L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <p>${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    // 获取并渲染有声有色
+    async function fetchRecommendedVideos() {
+        recommendedVideosDiv.innerHTML = `
+            <div class="placeholder">
+                <div class="loading-spinner"></div>
+                <p>正在加载推荐...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch(BASE_API_URL);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || '获取视频列表失败');
+            }
+
+            // 过滤掉当前视频
+            const recommended = data.videos.filter(v => v._id !== videoId);
+
+            if (recommended.length === 0) {
+                recommendedVideosDiv.innerHTML = `
+                    <div class="placeholder">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 16px; opacity: 0.3;">
+                            <path d="M12 8V12L15 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <p>暂无其他视频可推荐</p>
+                    </div>
+                `;
+                return;
+            }
+
+            recommendedVideosDiv.innerHTML = recommended.map(video => {
+                const thumbnailUrl = generateThumbnailUrl(video.url);
+                const date = new Date(video.uploadDate).toLocaleDateString();
+                
+                return `
+                    <a href="video.html?id=${video._id}" class="recommend-item">
+                        <div class="recommend-thumb-container">
+                            <img src="${thumbnailUrl}" alt="${video.title} 缩略图" class="recommend-thumb" 
+                                 onerror="this.onerror=null;this.src='https://via.placeholder.com/240x135?text=No+Preview';">
+                        </div>
+                        <div class="recommend-info">
+                            <h4>${video.title}</h4>
+                            <div class="recommend-meta">${date}</div>
+                        </div>
+                    </a>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('获取有声有色失败:', error);
+            recommendedVideosDiv.innerHTML = `
+                <div class="placeholder" style="color: #f53f3f;">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 16px;">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M15 9L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <p>加载推荐失败: ${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    // 页面加载完成后执行
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchCurrentVideo();
+        fetchRecommendedVideos();
+    });
+</script>
+</body>
+</html>

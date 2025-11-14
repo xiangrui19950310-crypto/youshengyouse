@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>视频管理后台 - 有声有色 / Land</title>
+    <style>
+        :root {
+            --primary: #165DFF;
+            --primary-light: #E8F3FF;
+            --primary-dark: #0E42D2;
+            --success: #00B42A;
+            --success-light: #E6FFED;
+            --danger: #F53F3F;
+            --danger-light: #FFECE8;
+            --warning: #FF7D00;
+            --warning-light: #FFF7E6;
+            --text-dark: #1D2129;
+            --text-gray: #4E5969;
+            --text-light: #86909C;
+            --border: #E5E6EB;
+            --bg-light: #F2F3F5;
+            --white: #FFFFFF;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --radius: 6px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        header {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1, h2 {
+            color: var(--text-dark);
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            position: relative;
+            padding-bottom: 12px;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary);
+            border-radius: 3px;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            margin-top: 24px;
+        }
+
+        .home-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .home-link:hover {
+            background-color: var(--primary-light);
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--text-gray);
+            font-size: 0.95rem;
+        }
+
+        input[type="text"],
+        input[type="file"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        input[type="file"] {
+            padding: 8px;
+            border: 1px dashed var(--border);
+            background-color: rgba(0, 0, 0, 0.01);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #008722;
+        }
+
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e67200;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #e03636;
+        }
+
+        .video-list {
+            margin-top: 16px;
+        }
+
+        .video-item {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            padding: 16px;
+            border-radius: var(--radius);
+            background-color: rgba(0, 0, 0, 0.01);
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .video-item:hover {
+            background-color: var(--primary-light);
+            border-color: var(--primary-light);
+        }
+
+        .video-info {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .video-info p {
+            margin: 6px 0;
+            font-size: 0.95rem;
+        }
+
+        .video-info strong {
+            color: var(--text-gray);
+            font-weight: 500;
+        }
+
+        .video-title {
+            font-weight: 500;
+            color: var(--primary);
+            font-size: 1.05rem !important;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .status-message {
+            margin: 15px 0;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .status-message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .status-success {
+            background-color: var(--success-light);
+            color: var(--success);
+            border: 1px solid #B7EB8F;
+        }
+
+        .status-error {
+            background-color: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid #FFCCC7;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .video-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎬 视频管理后台</h1>
+        <a href="index.html" class="home-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M9 22V12H15V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            返回首页
+        </a>
+    </header>
+    
+    <p style="margin-bottom: 20px; color: var(--text-gray);">当前后端运行在 <code style="background: var(--bg-light); padding: 2px 6px; border-radius: 3px;">http://localhost:3000</code></p>
+    
+    <div id="statusMessage" class="status-message"></div>
+
+    <div class="section">
+        <h2>⬆️ 上传新视频</h2>
+        <form id="uploadForm">
+            <div class="form-group">
+                <label for="videoTitle">视频标题:</label>
+                <input type="text" id="videoTitle" name="title" required placeholder="输入视频标题">
+            </div>
+            
+            <div class="form-group">
+                <label for="videoFile">选择视频文件:</label>
+                <input type="file" id="videoFile" name="videoFile" accept="video/*" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                开始上传
+            </button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>🎞️ 已上传视频列表</h2>
+        <button onclick="fetchVideos()" class="btn btn-success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 21L15 15M11 5H19C20.1046 5 21 5.89543 21 7V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V7C3 5.89543 3.89543 5 5 5H11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            刷新列表
+        </button>
+        <div id="videoList" class="video-list">
+            <p style="padding: 20px; text-align: center; color: var(--text-light);">点击“刷新列表”获取视频...</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const API_URL = 'http://localhost:3000/admin/videos';
+    const ADMIN_PASSWORD = 'Aa123456'; // ⚠️ 注意：密码直接写在前端代码中**不安全**！
+    const statusMessageDiv = document.getElementById('statusMessage');
+
+    // 显示状态消息
+    function showStatus(message, isError = false) {
+        statusMessageDiv.textContent = message;
+        statusMessageDiv.className = isError ? 'status-message status-error show' : 'status-message status-success show';
+        
+        // 添加图标
+        const icon = isError ? 
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' : 
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+        
+        statusMessageDiv.innerHTML = `${icon} ${message}`;
+
+        setTimeout(() => {
+            statusMessageDiv.classList.remove('show');
+        }, 5000);
+    }
+    
+    // ⭐ 新增: 检查密码函数
+    function checkPassword() {
+        const password = prompt('请输入管理员密码以继续操作:');
+        if (password === ADMIN_PASSWORD) {
+            return true;
+        } else if (password !== null) {
+            showStatus('密码错误，操作已取消。', true);
+        }
+        return false;
+    }
+    
+    // 获取视频列表
+    async function fetchVideos() {
+        const videoListDiv = document.getElementById('videoList');
+        videoListDiv.innerHTML = `
+            <div style="text-align: center; padding: 40px;">
+                <div style="width: 40px; height: 40px; border: 4px solid var(--primary-light); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                <p style="color: var(--text-light);">正在加载视频列表...</p>
+            </div>
+        `;
+
+        try {
+            // 注意: 获取列表不需要密码
+            const response = await fetch(API_URL);
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || '获取列表失败');
+            }
+
+            if (data.videos.length === 0) {
+                videoListDiv.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 16px; opacity: 0.3;">
+                            <path d="M12 8V12L15 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                        <p>暂无视频，请上传新视频。</p>
+                    </div>
+                `;
+                return;
+            }
+
+            videoListDiv.innerHTML = data.videos.map(video => `
+                <div class="video-item" data-id="${video._id}">
+                    <div class="video-info">
+                        <p class="video-title" id="title-${video._id}">${video.title}</p>
+                        <p><strong>ID:</strong> ${video._id}</p>
+                        <p><strong>上传时间:</strong> ${new Date(video.uploadDate).toLocaleString()}</p>
+                        <p><strong>视频地址:</strong> <a href="${video.url}" target="_blank" style="color: var(--primary); text-decoration: none;">查看视频</a></p>
+                    </div>
+                    <div class="video-actions">
+                        <button class="btn btn-warning" onclick="promptEditTitle('${video._id}')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            编辑标题
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteVideo('${video._id}')">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            删除
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            showStatus('视频列表刷新成功');
+
+        } catch (error) {
+            console.error('获取视频列表失败:', error);
+            videoListDiv.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--danger);">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 16px;">
+                        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M15 9L9 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M9 9L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <p>获取失败: ${error.message}</p>
+                </div>
+            `;
+            showStatus('获取视频列表失败: ' + error.message, true);
+        }
+    }
+    
+    // 处理视频上传
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // ⭐ 新增: 检查密码
+        if (!checkPassword()) {
+            return;
+        }
+        
+        const form = e.target;
+        const formData = new FormData();
+        
+        const title = form.elements.title.value;
+        const file = form.elements.videoFile.files[0];
+
+        if (!title || !file) {
+            showStatus('请填写标题并选择文件', true);
+            return;
+        }
+
+        formData.append('title', title);
+        formData.append('videoFile', file);
+        
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<div class="loading"></div> 上传中...';
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || '上传失败');
+            }
+
+            showStatus('视频上传成功: ' + data.video.title);
+            form.reset();
+            fetchVideos();
+
+        } catch (error) {
+            console.error('上传失败:', error);
+            showStatus('上传失败: ' + error.message, true);
+        } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }
+    });
+    
+    // 编辑视频标题
+    function promptEditTitle(id) {
+        // ⭐ 新增: 检查密码
+        if (!checkPassword()) {
+            return;
+        }
+        
+        const currentTitle = document.getElementById(`title-${id}`).textContent;
+        const newTitle = prompt(`请输入视频 (ID: ${id}) 的新标题:`, currentTitle);
+        
+        if (newTitle && newTitle.trim() !== currentTitle) {
+            editVideoTitle(id, newTitle.trim());
+        } else if (newTitle !== null) {
+            showStatus('标题未更改或取消操作。');
+        }
+    }
+
+    async function editVideoTitle(id, newTitle) {
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: newTitle })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || '更新标题失败');
+            }
+
+            document.getElementById(`title-${id}`).textContent = data.video.title;
+            showStatus('视频标题更新成功');
+
+        } catch (error) {
+            console.error('更新标题失败:', error);
+            showStatus('更新标题失败: ' + error.message, true);
+        }
+    }
+
+    // 删除视频
+    async function deleteVideo(id) {
+        // ⭐ 新增: 检查密码
+        if (!checkPassword()) {
+            return;
+        }
+        
+        if (!confirm(`确定要永久删除 ID 为 ${id} 的视频吗？此操作不可撤销！`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || '删除失败');
+            }
+
+            const item = document.querySelector(`.video-item[data-id="${id}"]`);
+            if (item) {
+                // 添加删除动画
+                item.style.height = item.offsetHeight + 'px';
+                item.style.overflow = 'hidden';
+                item.style.marginBottom = '0';
+                item.style.borderColor = 'transparent';
+                item.style.backgroundColor = 'transparent';
+                
+                setTimeout(() => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateX(20px)';
+                    item.style.marginBottom = '-1px';
+                    
+                    setTimeout(() => {
+                        item.remove();
+                        // 检查列表是否为空
+                        if (document.getElementById('videoList').children.length === 0) {
+                            document.getElementById('videoList').innerHTML = `
+                                <div style="text-align: center; padding: 40px; color: var(--text-light);">
+                                    <p>暂无视频，请上传新视频。</p>
+                                </div>
+                            `;
+                        }
+                    }, 200);
+                }, 10);
+            }
+            
+            showStatus('视频删除成功');
+
+        } catch (error) {
+            console.error('删除失败:', error);
+            showStatus('删除失败: ' + error.message, true);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchVideos);
+</script>
+</body>
+</html>
